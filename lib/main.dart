@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'student.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,65 +11,40 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'My First App',
+      title: 'Students',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
       ),
-      home: const HomePage(),
+      home: const StudentsPage(),
     );
   }
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  int _taps = 0;
-
-  void _increase() {
-    setState(() {
-      _taps++;
-    });
-  }
-
-  void _reset() {
-    setState(() {
-      _taps = 0;
-    });
-  }
+class StudentsPage extends StatelessWidget {
+  const StudentsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final students = [
+      Student('Sara', [85, 72, 90, 64, 78]),
+      Student('Daniel', [87, 92, 70, 94, 73]),
+      Student('Ali', [60, 55, 70]),
+    ];
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Daniel's First App")),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Well to app', style: TextStyle(fontSize: 36)),
-            const SizedBox(height: 16),
-            Text('You tapped $_taps times'),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: _increase,
-                  child: const Text('Tap me'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: _reset,
-                  child: const Text('Reset'),
-                ),
-              ],
+      appBar: AppBar(title: const Text('Students')),
+      body: ListView.builder(
+        itemCount: students.length,
+        itemBuilder: (context, index) {
+          final s = students[index];
+          return Card(
+            child: ListTile(
+              leading: CircleAvatar(child: Text(s.grade)),
+              title: Text(s.name),
+              subtitle: Text('Average: ${s.average.toStringAsFixed(1)}'),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
