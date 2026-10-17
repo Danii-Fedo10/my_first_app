@@ -35,6 +35,12 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _reset() {
+    setState(() {
+      _taps = 0;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,13 +49,23 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Hello, Daniel!', style: TextStyle(fontSize: 28)),
+            const Text('Well to app', style: TextStyle(fontSize: 36)),
             const SizedBox(height: 16),
             Text('You tapped $_taps times'),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _increase,
-              child: const Text('Tap me'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: _increase,
+                  child: const Text('Tap me'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _reset,
+                  child: const Text('Reset'),
+                ),
+              ],
             ),
           ],
         ),
