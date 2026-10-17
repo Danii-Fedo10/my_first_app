@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'student.dart';
 
 void main() {
@@ -29,6 +30,8 @@ class StudentsPage extends StatelessWidget {
       Student('Sara', [85, 72, 90, 64, 78]),
       Student('Daniel', [87, 92, 70, 94, 73]),
       Student('Ali', [60, 55, 70]),
+      Student('Maya', [95, 92, 98]),
+      Student('Leo', [45, 52, 48]),
     ];
 
     return Scaffold(
@@ -39,9 +42,16 @@ class StudentsPage extends StatelessWidget {
           final s = students[index];
           return Card(
             child: ListTile(
-              leading: CircleAvatar(child: Text(s.grade)),
+              leading: CircleAvatar(
+                backgroundColor: s.grade == 'F' ? Colors.red : Colors.green,
+                child: Text(s.grade),
+              ),
               title: Text(s.name),
               subtitle: Text('Average: ${s.average.toStringAsFixed(1)}'),
+              onTap: () {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text(s.name)));
+              },
             ),
           );
         },
