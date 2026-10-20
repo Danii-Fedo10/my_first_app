@@ -35,6 +35,12 @@ class _StudentsPageState extends State<StudentsPage> {
     Student('Ali', [60, 55, 70]),
   ];
 
+  double get _classAverage {
+    if (_students.isEmpty) return 0;
+    return _students.map((student) => student.average).reduce((a, b) => a + b) /
+        _students.length;
+  }
+
   Color _gradeColor(String grade) {
     if (grade == 'A' || grade == 'B') return Colors.green;
     if (grade == 'C' || grade == 'D') return Colors.orange;
@@ -42,53 +48,21 @@ class _StudentsPageState extends State<StudentsPage> {
   }
 
   Future<void> _addStudent() async {
-    final nameController = TextEditingController();
-    final scoresController = TextEditingController();
-
-    final result = await showDialog<Student>(
+    final result = await showDialog<_AddStudentResult>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add student'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Name'),
-            ),
-            TextField(
-              controller: scoresController,
-              decoration: const InputDecoration(
-                labelText: 'Scores (example: 80, 90, 75)',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              final scores = scoresController.text
-                  .split(',')
-                  .map((e) => int.tryParse(e.trim()))
-                  .whereType<int>()
-                  .toList();
-              if (name.isEmpty) return;
-              Navigator.pop(context, Student(name, scores));
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
+      builder: (context) => const _AddStudentDialog(),
     );
 
-    if (result != null && mounted) {
+    if (result?.hasInvalidScores == true && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Enter at least one score')));
+    }
+
+    final student = result?.student;
+    if (student != null && mounted) {
       setState(() {
-        _students.add(result);
+        _students.add(student);
       });
     }
   }
@@ -101,27 +75,124 @@ class _StudentsPageState extends State<StudentsPage> {
         onPressed: _addStudent,
         child: const Icon(Icons.add),
       ),
-      body: ListView.builder(
-        itemCount: _students.length,
-        itemBuilder: (context, index) {
-          final s = _students[index];
-          return Card(
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: _gradeColor(s.grade),
-                child: Text(s.grade),
-              ),
-              title: Text(s.name),
-              subtitle: Text('Average: ${s.average.toStringAsFixed(1)}'),
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('You tapped ${s.name}')),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text('Class average: ${_classAverage.toStringAsFixed(1)}'),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _students.length,
+              itemBuilder: (context, index) {
+                final s = _students[index];
+                return Card(
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: _gradeColor(s.grade),
+                      child: Text(s.grade),
+                    ),
+                    title: Text(s.name),
+                    subtitle: Text('Average: ${s.average.toStringAsFixed(1)}'),
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('You tapped ${s.name}')),
+                      );
+                    },
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () {
+                        setState(() {
+                          _students.removeAt(index);
+                        });
+                      },
+                    ),
+                  ),
                 );
               },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
+}
+
+class _AddStudentDialog extends StatefulWidget {
+  const _AddStudentDialog();
+
+  @override
+  State<_AddStudentDialog> createState() => _AddStudentDialogState();
+}
+
+class _AddStudentDialogState extends State<_AddStudentDialog> {
+  final _nameController = TextEditingController();
+  final _scoresController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _scoresController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final name = _nameController.text.trim();
+    final scores = _scoresController.text
+        .split(',')
+        .map((score) => int.tryParse(score.trim()))
+        .whereType<int>()
+        .toList();
+    if (name.isEmpty) return;
+
+    Navigator.pop(
+      context,
+      scores.isEmpty
+          ? const _AddStudentResult.invalidScores()
+          : _AddStudentResult.student(Student(name, scores)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Add student'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(labelText: 'Name'),
+          ),
+          TextField(
+            controller: _scoresController,
+            decoration: const InputDecoration(
+              labelText: 'Scores (example: 80, 90, 75)',
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(onPressed: _submit, child: const Text('Add')),
+      ],
+    );
+  }
+}
+
+class _AddStudentResult {
+  final Student? student;
+  final bool hasInvalidScores;
+
+  const _AddStudentResult.student(Student value)
+    : student = value,
+      hasInvalidScores = false;
+
+  const _AddStudentResult.invalidScores()
+    : student = null,
+      hasInvalidScores = true;
 }
