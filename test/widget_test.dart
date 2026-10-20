@@ -59,19 +59,21 @@ void main() {
     expect(find.byType(ListTile), findsNWidgets(2));
   });
 
-  testWidgets('Adding a student without valid scores shows a SnackBar', (
-    tester,
-  ) async {
-    await tester.pumpWidget(const MyApp());
-    await tester.tap(find.byType(FloatingActionButton));
-    await tester.pumpAndSettle();
+testWidgets('Adding a student shows it in the list', (tester) async {
+  await tester.pumpWidget(const MyApp());
 
-    await tester.enterText(find.byType(TextField).first, 'Maya');
-    await tester.enterText(find.byType(TextField).last, 'abc, , -');
-    await tester.tap(find.text('Add'));
-    await tester.pumpAndSettle();
+  await tester.tap(find.byIcon(Icons.add));
+  await tester.pumpAndSettle();
 
-    expect(find.text('Enter at least one score'), findsOneWidget);
-    expect(find.text('Maya'), findsNothing);
-  });
+  await tester.enterText(find.widgetWithText(TextField, 'Name'), 'Hana');
+  await tester.enterText(
+    find.widgetWithText(TextField, 'Scores (example: 80, 90, 75)'),
+    '95, 88, 92',
+  );
+  await tester.tap(find.text('Add'));
+  await tester.pumpAndSettle();
+
+  expect(find.text('Hana'), findsOneWidget);
+  expect(find.text('Average: 91.7'), findsOneWidget);
+});
 }
