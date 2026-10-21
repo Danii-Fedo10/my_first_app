@@ -20,4 +20,13 @@ class Student {
     if (average >= 60) return 'D';
     return 'F';
   }
+
+  Map<String, dynamic> toJson() => {'name': name, 'scores': scores};
+
+  factory Student.fromJson(Map<String, dynamic> json) {
+    return Student(
+      json['name'] as String,
+      List<int>.from(json['scores'] as List),
+    );
+  }
 }

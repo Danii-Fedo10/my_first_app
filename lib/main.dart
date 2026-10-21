@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'student.dart';
 
@@ -29,11 +32,48 @@ class StudentsPage extends StatefulWidget {
 }
 
 class _StudentsPageState extends State<StudentsPage> {
-  final List<Student> _students = [
-    Student('Sara', [85, 72, 90, 64, 78]),
-    Student('Daniel', [87, 92, 70, 94, 73]),
-    Student('Ali', [60, 55, 70]),
-  ];
+  static const _storageKey = 'students';
+
+  final List<Student> _students = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStudents();
+  }
+
+  Future<void> _loadStudents() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(_storageKey);
+
+    List<Student> loaded;
+    if (saved == null) {
+      // First launch: start with the example students
+      loaded = [
+        Student('Sara', [85, 72, 90, 64, 78]),
+        Student('Daniel', [87, 92, 70, 94, 73]),
+        Student('Ali', [60, 55, 70]),
+      ];
+    } else {
+      final list = jsonDecode(saved) as List;
+      loaded = list
+          .map((item) => Student.fromJson(item as Map<String, dynamic>))
+          .toList();
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _students
+        ..clear()
+        ..addAll(loaded);
+    });
+  }
+
+  Future<void> _saveStudents() async {
+    final prefs = await SharedPreferences.getInstance();
+    final text = jsonEncode(_students.map((s) => s.toJson()).toList());
+    await prefs.setString(_storageKey, text);
+  }
 
   double get _classAverage {
     if (_students.isEmpty) return 0;
@@ -64,6 +104,7 @@ class _StudentsPageState extends State<StudentsPage> {
       setState(() {
         _students.add(student);
       });
+      await _saveStudents();
     }
   }
 
@@ -102,10 +143,11 @@ class _StudentsPageState extends State<StudentsPage> {
                     },
                     trailing: IconButton(
                       icon: const Icon(Icons.delete),
-                      onPressed: () {
+                      onPressed: () async {
                         setState(() {
                           _students.removeAt(index);
                         });
+                        await _saveStudents();
                       },
                     ),
                   ),
